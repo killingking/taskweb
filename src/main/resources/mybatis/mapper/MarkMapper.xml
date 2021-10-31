@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sd.task.mapper.MarkMapper">
+    <insert id="insMark">
+        insert into mark(id, task_id, oper_id,account, status,locked) values (default,#{taskId},#{operId},#{account},#{status},#{locked});
+    </insert>
+    <update id="updMarkStatusByTS">
+        update mark set status = #{descStatus} where task_id = #{taskId} and status = #{srcStatus};
+    </update>
+    <update id="updMarkStatusByLocked">
+        update mark set status = #{status} where locked = #{locked};
+    </update>
+    <update id="updMarkStatusByVOS">
+        update mark set status = #{descStatus} where task_id =
+        (select id from task_list where video_id = #{videoId})
+         and oper_id = #{operId} and status = #{srcStatus}
+    </update>
+
+    <select id="selMarkByVOId" resultType="int">
+        select count(*) from mark where video_id = #{videoId} and oper_id = #{operId};
+    </select>
+    <select id="countMarkByOperId" resultType="java.lang.Long">
+        select count(*) from mark where oper_id = #{operId} and status = 1
+    </select>
+    <select id="ckeckMarkByTOId" resultType="java.lang.Long">
+        select count(*) from mark where = task_id = #{taskId} and oper_id = #{operId};
+    </select>
+    <select id="selTaskIdByOperId" resultType="java.lang.Long">
+        select distinct task_id from mark where oper_id = #{operId};
+    </select>
+    <select id="selTaskByOperId" resultType="com.sd.task.pojo.Mark">
+        select * from mark where oper_id = #{operId}
+    </select>
+    <select id="countMarkByTaskIdAndStatus" resultType="java.lang.Long">
+        select count(*) from mark where task_id = #{taskId} and status = #{status};
+    </select>
+</mapper>
