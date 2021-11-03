@@ -1,8 +1,8 @@
-package com.sd.task.vo;
+package com.sd.task.pojo.dto;
 
 import org.json.JSONObject;
 
-class JSONResult{
+public class JSONResult{
     public static String fillResultString(Integer status, String message, Object result){
         JSONObject jsonObject = new JSONObject(){{
             put("status", status);

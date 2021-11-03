@@ -57,6 +57,7 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   #开启别名
   type-aliases-package: com.sd.task.pojo
+#  type-handlers-package: com.sd.task.mapper
 pagehelper:
   #页参数合理化
   reasonable: true

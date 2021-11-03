@@ -1,6 +1,7 @@
 package com.sd.task.pojo;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TaskList {
-    @TableId(value = "id",type = IdType.AUTO)
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
     private String videoId;
     private String secuId;
@@ -27,7 +28,8 @@ public class TaskList {
     private LocalDateTime finishTime;
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime expireTime;
-    private String description;
+    @TableField("`desc`")
+    private String desc;
     private Integer taskLevel;
     private String chanel;
 }
