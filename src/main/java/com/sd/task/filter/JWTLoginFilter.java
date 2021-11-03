@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sd.task.pojo.dto.AccountCredentials;
 import com.sd.task.pojo.dto.JSONResult;
 import com.sd.task.utils.TokenAuthenticationService;
-import org.json.JSONObject;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -49,6 +48,6 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
         response.setContentType("application/json;charset=utf-8");
         response.setStatus(HttpServletResponse.SC_OK);
-        response.getOutputStream().write(JSONResult.fillResultString(403, failed.getMessage(), JSONObject.NULL).getBytes(StandardCharsets.UTF_8));
+        response.getOutputStream().write(JSONResult.fillResultString(403, failed.getMessage(), null).getBytes(StandardCharsets.UTF_8));
     }
 }

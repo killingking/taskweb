@@ -8,7 +8,7 @@ import java.util.Map;
 public interface TaskListService {
     TaskList queryTaskListById(Long id);
 
-    int incremTaskList(TaskList taskList);
+    void incremTaskList(TaskList taskList) throws Exception;
 
     TaskList queryTaskListByVideoId(String videoId);
 
@@ -17,7 +17,7 @@ public interface TaskListService {
     List<TaskList> getTaskListIfUseStatus(Integer status);
 
 
-    Map<String, Object> getTaskListSafe(String account, String operId, Integer type);
+    TaskList getTaskListSafe(String account, String operId, Integer type) throws Exception;
 
-    Map<String, Object> commitTaskSafe(String videoId, String operId, String account, Integer status);
+    TaskList commitTaskSafe(String videoId, String operId, String account, Integer status) throws Exception;
 }

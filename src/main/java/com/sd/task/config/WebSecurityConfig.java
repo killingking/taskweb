@@ -19,12 +19,26 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.csrf().disable()
                 //对所有请求认证
                 .authorizeRequests()
+                // 放行静态资源
+                .antMatchers(
+                        HttpMethod.GET,
+                        "/*.html",
+                        "/**/*.html",
+                        "/**/*.css",
+                        "/**/*.js",
+                        "/webSocket/**",
+                        "/swagger-resources/**",
+                        "/**.ico",
+                        "/v2/**",
+                        "/profile/**"
+                ).permitAll()
                 //对所有/account/register的请求都放行
                 .antMatchers(HttpMethod.POST, "/account/register").permitAll()
                 //所有/login的post请求都放行
                 .antMatchers(HttpMethod.POST, "/account/login").permitAll()
                 .antMatchers(HttpMethod.GET, "/account/info").permitAll()
-                .antMatchers(HttpMethod.GET, "/doc.html").permitAll()
+                //方便测试开放
+                .antMatchers("/api/task/**").permitAll()
                 //权限检查
 //                .antMatchers("/hello").hasAuthority("AUTH_WRITE")
                 //角色检查

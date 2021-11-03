@@ -55,8 +55,7 @@ public class TaskListServiceImpl implements TaskListService {
      */
     @Override
     @Transactional
-    public int incremTaskList(TaskList taskList) {
-        int res = -1;
+    public void incremTaskList(TaskList taskList) throws Exception {
         LocalDateTime localDateTime = LocalDateTime.now();
         LocalDateTime expireTime = taskList.getExpireTime();
         taskList.setStatus(0);
@@ -66,22 +65,23 @@ public class TaskListServiceImpl implements TaskListService {
         }
         long interval = ChronoUnit.SECONDS.between(localDateTime, expireTime);
         if (interval < 0) {
-            res = -2;
-            return res;
+            throw new Exception("任务期限有误");
         }
-        res = taskListMapper.insert(taskList);
-        List<TaskList> tasks = taskListMapper.selTaskListonOpen();
-        stringRedisTemplate.opsForValue().set(taskList.getVideoId() + ":" + TASKCOUNT,
-                String.valueOf(taskList.getTaskTotal()), interval, TimeUnit.SECONDS);
-        request.getServletContext().setAttribute("taskContext", tasks);
-        return res;
+        try {
+            taskListMapper.insert(taskList);
+            List<TaskList> tasks = taskListMapper.selTaskListonOpen();
+            stringRedisTemplate.opsForValue().set(taskList.getVideoId() + ":" + TASKCOUNT,
+                    String.valueOf(taskList.getTaskTotal()), interval, TimeUnit.SECONDS);
+            request.getServletContext().setAttribute("taskContext", tasks);
+        } catch (Exception e) {
+            throw new Exception("任务已存在,无法重复添加");
+        }
     }
 
     @Override
     public TaskList queryTaskListByVideoId(String videoId) {
         return taskListMapper.selTaskListByVideoId(videoId);
     }
-
 
 
     @Override
@@ -99,17 +99,12 @@ public class TaskListServiceImpl implements TaskListService {
      */
     @Override
     @Transactional
-    public Map<String, Object> getTaskListSafe(String account, String operId, Integer type) {
-        HashMap<String, Object> resMap = new HashMap<>();
-        List<TaskList> taskContext = new ArrayList<>();
+    public TaskList getTaskListSafe(String account, String operId, Integer type) throws Exception {
         //从context里取的任务都是在处理中的
-        taskContext = (ArrayList<TaskList>) request.getServletContext().getAttribute("taskContext");
+        List<TaskList> taskContext = (ArrayList<TaskList>) request.getServletContext().getAttribute("taskContext");
         List<TaskList> tasks = new ArrayList<>();
         if (taskContext == null) {
-            resMap.put("task", null);
-            resMap.put("status", 0);//无任务可接
-            resMap.put("msg", "无任务可接");
-            return resMap;
+            throw new Exception("无任务可接");
         }
         List<Long> mTaskIds = markMapper.selTaskIdByOperId(operId);
         if (mTaskIds != null) {//过滤掉已经领过的任务和类型不匹配的任务
@@ -121,10 +116,7 @@ public class TaskListServiceImpl implements TaskListService {
         }
         //如果该operid都匹配不到,那么它就没有可以领的任务
         if (tasks.size() == 0) {
-            resMap.put("task", null);
-            resMap.put("status", 3);//无任务可接
-            resMap.put("msg", "无任务可领");
-            return resMap;
+            throw new Exception("无任务可领");
         }
         boolean locked = false;
         boolean block = false;
@@ -152,11 +144,8 @@ public class TaskListServiceImpl implements TaskListService {
                     resTask = task;
                 }
             } catch (Exception e) {
-                resMap.put("task", null);
-                resMap.put("status", 2);//无空闲任务
-                resMap.put("msg", "无空闲任务");
                 e.printStackTrace();
-                return resMap;
+                throw new Exception("无空闲任务");
             }
         }
         if (block) {
@@ -166,30 +155,23 @@ public class TaskListServiceImpl implements TaskListService {
                         account + ":" + operId + ":" + resTask.getVideoId(), 1, TimeUnit.MINUTES);
             } catch (Exception e) {
                 e.printStackTrace();
-                resMap.put("task", null);
-                resMap.put("status", 2);//无空闲任务
-                resMap.put("msg", "无空闲任务");
                 if (StringUtils.hasLength(operLock)) {
                     stringRedisTemplate.delete(operLock);
                     stringRedisTemplate.opsForValue().increment(taskSTK);
                 }
+                throw new Exception("无空闲任务");
             }
         } else {
             if (resTask == null) {
-                resMap.put("task", null);
-                resMap.put("status", 2);//无空闲任务
-                resMap.put("msg", "无空闲任务");
-                return resMap;
+                throw new Exception("无空闲任务");
             }
             locked = false;
         }
         if (!locked) {
-            resMap.put("task", null);
-            resMap.put("status", 2);//无空闲任务
-            resMap.put("msg", "无空闲任务");
             if (StringUtils.hasLength(operLock)) {
                 stringRedisTemplate.delete(operLock);
             }
+            throw new Exception("无空闲任务");
         } else {
             Mark mark = new Mark();
             mark.setTaskId(resTask.getId());
@@ -198,11 +180,8 @@ public class TaskListServiceImpl implements TaskListService {
             mark.setStatus(0);
             mark.setLocked(operLock);
             markMapper.insMark(mark);
-            resMap.put("task", resTask);
-            resMap.put("status", 1);//成功获取任务Id
-            resMap.put("msg", "成功获取任务");
+            return resTask;
         }
-        return resMap;
     }
 
     private boolean decrTaskSTK(String taskSTK) {
@@ -240,67 +219,52 @@ public class TaskListServiceImpl implements TaskListService {
      */
     @Transactional
     @Override
-    public Map<String, Object> commitTaskSafe(String videoId, String operId, String account, Integer status) {
+    public TaskList commitTaskSafe(String videoId, String operId, String account, Integer status) throws Exception {
         String lockKey = TASK_LIST_LOCK + ":" + videoId + ":" + operId;
         String lockValue = stringRedisTemplate.opsForValue().get(lockKey);
-        HashMap<String, Object> resMap = new HashMap<>();
-        try {
-            if (status == 0) {
-                resMap.put("status", 0);
-                resMap.put("msg", "任务失败,释放任务");
-                markMapper.updMarkStatusByLocked(lockKey, 2);
-                stringRedisTemplate.opsForValue().increment(videoId + ":" + LoadDataCommanRunner.TASKCOUNT);
-                stringRedisTemplate.delete(lockKey);
-                return resMap;
-            } else if (status == 1) {
-                if (!StringUtils.hasLength(lockValue) || !(account + ":" + operId + ":" + videoId).equals(lockValue)) {
-                    resMap.put("status", 3);
-                    resMap.put("msg", "任务已提交或参数有误");
-                    stringRedisTemplate.delete(lockKey);
-                    return resMap;
-                }
-                TaskList task = taskListMapper.selTaskListByVideoId(videoId);
-                if (task == null) {
-                    stringRedisTemplate.delete(lockKey);
-                    resMap.put("status", 3);
-                    resMap.put("msg", "找不到该任务");
-                    return resMap;
-                }
-                if (task.getStatus() == 0 || task.getStatus() == 2) {//未完成和处理中进行操作
-                    markMapper.updMarkStatusByLocked(lockKey, 1);
-                    taskListMapper.updTaskCount(videoId);
-                    if (task.getTaskCount() + 1 >= task.getTaskTotal()) {
-                        task.setFinishTime(LocalDateTime.now());
-                        task.setStatus(1);
-                        task.setTaskCount(task.getTaskCount() + 1);
-                        taskListMapper.updateById(task);
-//                        taskListMapper.updTaskStatusByVideoId(videoId, 1);
-                        stringRedisTemplate.delete(videoId + ":" + LoadDataCommanRunner.TASKCOUNT);
-                        List<TaskList> taskLists = taskListMapper.selTaskListonOpen();
-                        request.getServletContext().setAttribute("taskContext", taskLists);
-                    }
-                    if (task.getStatus() == 0) {
-                        taskListMapper.updTaskStatusByVideoId(videoId, 2);
-                    }
-                    stringRedisTemplate.delete(lockKey);
-                    resMap.put("status", 1);
-                    resMap.put("msg", "任务提交成功");
-                    task.setTaskCount(task.getTaskCount() + 1);
-                    task.setStatus(1);
-                    resMap.put("task", task);
-                } else if (task.getStatus() == 1) {
-                    stringRedisTemplate.delete(lockKey);
-                    resMap.put("status", 3);
-                    resMap.put("msg", "该任务额已满");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (status == 0) {
+            markMapper.updMarkStatusByLocked(lockKey, 2);
+            stringRedisTemplate.opsForValue().increment(videoId + ":" + LoadDataCommanRunner.TASKCOUNT);
             stringRedisTemplate.delete(lockKey);
-            resMap.put("status", 4);
-            resMap.put("msg", "任务失败");
-            return resMap;
+            throw new Exception("任务失败,释放任务");
+        } else if (status == 1) {
+            if (!StringUtils.hasLength(lockValue)) {
+                throw new Exception("任务已提交或任务已超时或参数有误");
+            }
+            if (!(account + ":" + operId + ":" + videoId).equals(lockValue)) {
+                stringRedisTemplate.delete(lockKey);
+                throw new Exception("提交参数参数有误");
+            }
+            TaskList task = taskListMapper.selTaskListByVideoId(videoId);
+            if (task == null) {
+                stringRedisTemplate.delete(lockKey);
+                throw new Exception("找不到该任务");
+            }
+            if (task.getStatus() == 0 || task.getStatus() == 2) {//未完成和处理中进行操作
+                markMapper.updMarkStatusByLocked(lockKey, 1);
+                taskListMapper.updTaskCount(videoId);
+                if (task.getTaskCount() + 1 >= task.getTaskTotal()) {
+                    task.setFinishTime(LocalDateTime.now());
+                    task.setStatus(1);
+                    task.setTaskCount(task.getTaskCount() + 1);
+                    taskListMapper.updateById(task);
+                    stringRedisTemplate.delete(videoId + ":" + LoadDataCommanRunner.TASKCOUNT);
+                    List<TaskList> taskLists = taskListMapper.selTaskListonOpen();
+                    request.getServletContext().setAttribute("taskContext", taskLists);
+                }
+                if (task.getStatus() == 0) {
+                    taskListMapper.updTaskStatusByVideoId(videoId, 2);
+                }
+                stringRedisTemplate.delete(lockKey);
+                return task;
+            } else if (task.getStatus() == 1) {
+                stringRedisTemplate.delete(lockKey);
+                throw new Exception("该任务配额已满");
+            }
+        } else {
+            stringRedisTemplate.delete(lockKey);
+            throw new Exception("任务失败");
         }
-        return resMap;
+        return null;
     }
 }

@@ -1,13 +1,15 @@
-package com.sd.task.controller;
+package com.sd.task.controller.adivce;
 
 import com.sd.task.pojo.dto.JSONResult;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Objects;
 
@@ -24,7 +26,7 @@ public class ControllerAdvice {
     @ExceptionHandler({Exception.class})
     @ResponseBody
     public String exceptionHandler(Exception e) {
-        return JSONResult.fillResultString(5000, e.getMessage(), JSONObject.NULL);
+        return JSONResult.fillResultString(5000, e.getMessage(), null);
     }
 
     /**
@@ -39,7 +41,7 @@ public class ControllerAdvice {
         BindingResult bindingResult = e.getBindingResult();
         String msg = Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage();
         log.error("参数校验异常拦截：{}", msg);
-        return JSONResult.fillResultString(0, msg, JSONObject.NULL);
+        return JSONResult.fillResultString(0, msg, null);
     }
 
     /**
@@ -54,7 +56,7 @@ public class ControllerAdvice {
         BindingResult bindingResult = e.getBindingResult();
         String msg = Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage();
         log.error("参数校验异常拦截：{}", msg);
-        return JSONResult.fillResultString(0, msg, JSONObject.NULL);
+        return JSONResult.fillResultString(0, msg, null);
     }
 
 }
