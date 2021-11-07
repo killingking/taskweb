@@ -74,7 +74,7 @@ public class TaskListController {
         }
         try {
             TaskList task = taskListService.commitTaskSafe(videoId, operId, account, status);
-            return JSONResult.fillResultString(1, "提交成功", task);
+            return JSONResult.fillResultString(1, "提交成功", null);
         } catch (Exception e) {
             return JSONResult.fillResultString(0, e.getMessage(), null);
         }
@@ -99,7 +99,6 @@ public class TaskListController {
         try {
             HashMap<String, Object> taskMap = new HashMap<>();
             TaskList task = taskListService.getTaskListSafe(account, operId, type);
-            taskMap.put("account", task.getAccount());
             taskMap.put("id", task.getId());
             taskMap.put("price", task.getPrice());
             taskMap.put("uid", task.getUid());

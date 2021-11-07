@@ -28,7 +28,6 @@ public class RedisKeyExpiretionListener extends KeyExpirationEventMessageListene
     @Transactional
     public void onMessage(Message message, byte[] pattern) {
         String expireKey = message.toString();
-        System.out.println(expireKey);
         String operLockKey = TaskListServiceImpl.TASK_LIST_LOCK + ":";
         if (expireKey.startsWith(operLockKey)) {
             String[] splitExpireKey = expireKey.split(":");
@@ -36,6 +35,5 @@ public class RedisKeyExpiretionListener extends KeyExpirationEventMessageListene
             stringRedisTemplate.opsForValue().increment(taskSTKkey);
             markMapper.updMarkStatusByVOS(splitExpireKey[1], splitExpireKey[2], 0, 3);
         }
-        System.out.println(expireKey);
     }
 }

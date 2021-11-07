@@ -16,6 +16,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +34,10 @@ public class AccountServiceImpl implements AccountService {
         if (hasRecord != null) {
             throw new Exception("该用户已存在");
         }
+        account.setStatus(1);
+        account.setCreateTime(LocalDateTime.now());
+        account.setUpdTime(LocalDateTime.now());
+        account.setMoney(0);
         accountMapper.insert(account);
         //新增用户默认权限为3-普通成员
         accountRoleMapper.insert(new AccountRole(account.getId(), 3L));

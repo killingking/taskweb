@@ -1,10 +1,14 @@
 package com.sd.task.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.sd.task.config.LoadDataCommanRunner;
+import com.sd.task.mapper.AccountMapper;
 import com.sd.task.mapper.MarkMapper;
 import com.sd.task.mapper.TaskListMapper;
+import com.sd.task.pojo.Account;
 import com.sd.task.pojo.Mark;
 import com.sd.task.pojo.TaskList;
+import com.sd.task.service.AccountService;
 import com.sd.task.service.TaskListService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -42,6 +46,9 @@ public class TaskListServiceImpl implements TaskListService {
 
     @Autowired
     private MarkMapper markMapper;
+
+    @Autowired
+    private AccountMapper accountMapper;
 
     @Override
     public TaskList queryTaskListById(Long id) {
@@ -100,6 +107,13 @@ public class TaskListServiceImpl implements TaskListService {
     @Override
     @Transactional
     public TaskList getTaskListSafe(String account, String operId, Integer type) throws Exception {
+        Integer accExists = accountMapper.selectCount(
+                new QueryWrapper<Account>()
+                        .eq("account", account)
+                        .eq("status", 1));
+        if (accExists == null || accExists <= 0) {
+            throw new Exception("非法账户");
+        }
         //从context里取的任务都是在处理中的
         List<TaskList> taskContext = (ArrayList<TaskList>) request.getServletContext().getAttribute("taskContext");
         List<TaskList> tasks = new ArrayList<>();
@@ -134,7 +148,6 @@ public class TaskListServiceImpl implements TaskListService {
                 continue;
             }
             taskSTK = task.getVideoId() + ":" + LoadDataCommanRunner.TASKCOUNT;
-            String coutTask = null;
             try {
                 if (decrTaskSTK(taskSTK)) {
                     resTask = task;
@@ -229,6 +242,18 @@ public class TaskListServiceImpl implements TaskListService {
             throw new Exception("任务失败,释放任务");
         } else if (status == 1) {
             if (!StringUtils.hasLength(lockValue)) {
+                QueryWrapper<Mark> wrapper = new QueryWrapper();
+                wrapper.eq("locked", TASK_LIST_LOCK + ":" + videoId + ":" + operId);
+                Mark mark = markMapper.selectOne(wrapper);
+                if (mark == null) {
+                    throw new Exception("参数有误");
+                }
+                if (mark.getStatus() == 1) {
+                    throw new Exception("任务已提交");
+                }
+                if (mark.getStatus() == 3) {
+                    throw new Exception("任务已超时");
+                }
                 throw new Exception("任务已提交或任务已超时或参数有误");
             }
             if (!(account + ":" + operId + ":" + videoId).equals(lockValue)) {
