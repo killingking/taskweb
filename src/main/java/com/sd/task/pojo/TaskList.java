@@ -20,6 +20,7 @@ public class TaskList {
     private Long id;
     @NotNull(message = "不能为空")
     private String videoId;
+    private String uid;
     private String secuId;
     private String account;
     @Min(value = 0,message = "数值必须大于0")

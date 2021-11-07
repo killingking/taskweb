@@ -3,7 +3,6 @@ package com.sd.task.controller;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.github.xiaoymin.knife4j.annotations.ApiOperationSupport;
 import com.github.xiaoymin.knife4j.annotations.DynamicParameter;
 import com.github.xiaoymin.knife4j.annotations.DynamicResponseParameters;
 import com.sd.task.pojo.TaskList;
@@ -17,10 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Api(tags = "任务清单模块")
 @RestController
@@ -100,8 +97,15 @@ public class TaskListController {
             return JSONResult.fillResultString(400, "请求参数有误", null);
         }
         try {
+            HashMap<String, Object> taskMap = new HashMap<>();
             TaskList task = taskListService.getTaskListSafe(account, operId, type);
-            return JSONResult.fillResultString(1, "申请任务成功", task);
+            taskMap.put("account", task.getAccount());
+            taskMap.put("id", task.getId());
+            taskMap.put("price", task.getPrice());
+            taskMap.put("uid", task.getUid());
+            taskMap.put("type", task.getType());
+            taskMap.put("videoId", task.getVideoId());
+            return JSONResult.fillResultString(1, "申请任务成功", taskMap);
         } catch (Exception e) {
             return JSONResult.fillResultString(0, e.getMessage(), null);
         }
