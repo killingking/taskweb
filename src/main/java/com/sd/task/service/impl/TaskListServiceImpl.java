@@ -1,6 +1,7 @@
 package com.sd.task.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.sd.task.config.LoadDataCommanRunner;
 import com.sd.task.mapper.AccountMapper;
 import com.sd.task.mapper.MarkMapper;
@@ -291,5 +292,15 @@ public class TaskListServiceImpl implements TaskListService {
             throw new Exception("任务失败");
         }
         return null;
+    }
+
+    @Override
+    @Transactional
+    public void deleteTaskById(Long id) throws Exception {
+        TaskList taskList = taskListMapper.selTaskListById(id);
+        if (taskList == null) {
+            throw new Exception("任务不存在");
+        }
+        taskListMapper.deleteById(id);
     }
 }

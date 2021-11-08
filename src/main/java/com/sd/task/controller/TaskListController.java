@@ -131,4 +131,16 @@ public class TaskListController {
         TaskList task = taskListService.queryTaskListByVideoId(videoId);
         return JSONResult.fillResultString(1, "success", task);
     }
+
+
+    @DeleteMapping(value = "delTask", produces = "application/json;charset=UTF-8")
+    public String delTask(@RequestParam(required = true) Long taskId) {
+        try {
+            taskListService.deleteTaskById(taskId);
+            return JSONResult.fillResultString(1, "删除成功", null);
+        } catch (Exception e) {
+            return JSONResult.fillResultString(0, e.getMessage(), null);
+        }
+    }
+
 }

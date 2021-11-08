@@ -20,4 +20,6 @@ public interface TaskListService {
     TaskList getTaskListSafe(String account, String operId, Integer type) throws Exception;
 
     TaskList commitTaskSafe(String videoId, String operId, String account, Integer status) throws Exception;
+
+    void deleteTaskById(Long id) throws Exception;
 }
