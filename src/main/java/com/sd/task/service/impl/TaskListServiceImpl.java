@@ -313,4 +313,22 @@ public class TaskListServiceImpl implements TaskListService {
             }
         }
     }
+
+    @Override
+    public Map<String, Integer> countTask() {
+        HashMap<String, Integer> resMap = new HashMap<>();
+        QueryWrapper<TaskList> wrapper1 = new QueryWrapper<>();
+        QueryWrapper<TaskList> wrapper2 = new QueryWrapper<>();
+        QueryWrapper<TaskList> wrapper3 = new QueryWrapper<>();
+        wrapper1.eq("status", 0).or().eq("status", 2);
+        wrapper2.eq("status", 1);
+        wrapper3.eq("status", 3);
+        Integer produces = taskListMapper.selectCount(wrapper1);
+        Integer success = taskListMapper.selectCount(wrapper2);
+        Integer fail = taskListMapper.selectCount(wrapper3);
+        resMap.put("success", success);
+        resMap.put("produces", produces);
+        resMap.put("fail", fail);
+        return resMap;
+    }
 }

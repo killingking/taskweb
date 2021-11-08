@@ -22,4 +22,6 @@ public interface TaskListService {
     TaskList commitTaskSafe(String videoId, String operId, String account, Integer status) throws Exception;
 
     void deleteTaskById(Long id) throws Exception;
+
+    Map<String,Integer> countTask();
 }

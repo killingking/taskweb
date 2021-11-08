@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Api(tags = "任务清单模块")
 @RestController
@@ -143,4 +144,13 @@ public class TaskListController {
         }
     }
 
+    @GetMapping(value = "count", produces = "application/json;charset=UTF-8")
+    public String queryTaskCount() {
+        try {
+            Map<String, Integer> resMap = taskListService.countTask();
+            return JSONResult.fillResultString(0, "查询成功", resMap);
+        }catch (Exception e) {
+            return JSONResult.fillResultString(0, e.getMessage(), null);
+        }
+    }
 }

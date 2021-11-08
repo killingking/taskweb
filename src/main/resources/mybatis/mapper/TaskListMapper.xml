@@ -4,54 +4,86 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.sd.task.mapper.TaskListMapper">
     <update id="updTaskStatusByVideoId">
-        update task_list set status = #{status} where video_id = #{videoId};
+        update task_list
+        set status = #{status}
+        where video_id = #{videoId};
     </update>
     <update id="updTaskCount">
-        update task_list set task_count = task_count + 1 where video_id = #{videoId};
+        update task_list
+        set task_count = task_count + 1
+        where video_id = #{videoId};
     </update>
     <update id="updTaskStatusById">
-        update task_list set status = #{status} where id = #{taskId};
+        update task_list
+        set status = #{status}
+        where id = #{taskId};
     </update>
 
     <select id="selTaskListById" resultType="taskList">
-    select * from task_list where id = #{id};
+        select *
+        from task_list
+        where id = #{id};
     </select>
     <select id="selTaskListByVideoId" resultType="com.sd.task.pojo.TaskList">
-        select * from task_list where video_id = #{videoId};
+        select *
+        from task_list
+        where video_id = #{videoId};
     </select>
     <select id="selTaskStatus" resultType="java.lang.Integer">
-        select status from task_list where video_id = #{videoId};
+        select status
+        from task_list
+        where video_id = #{videoId};
     </select>
     <select id="selTaskListUseStatus" resultType="com.sd.task.pojo.TaskList">
         select * from task_list where 1 = 1
         <if test="status != null">
             and status = #{status}
         </if>
+        order by id desc
     </select>
 
     <select id="sortTaskList" resultType="com.sd.task.pojo.TaskList">
-        select * from task_list where id > (select taskId from mark
-        where oper_id = #{operId} and status = 1
-        order by id limit 1) and (status = 2 or status = 0) limit 1;
+        select *
+        from task_list
+        where id > (select taskId
+                    from mark
+                    where oper_id = #{operId}
+                      and status = 1
+                    order by id
+            limit 1)
+          and (status = 2
+           or status = 0) limit 1;
     </select>
     <select id="sortTaskListFirst" resultType="com.sd.task.pojo.TaskList">
-        select * from task_list where status = 2 or status = 0 limit 0,1;
+        select *
+        from task_list
+        where status = 2
+           or status = 0 limit 0,1;
     </select>
     <select id="countTaskOnOpen" resultType="java.lang.Integer">
-        select count(*) from task_list where status = 2 or status = 0;
+        select count(*)
+        from task_list
+        where status = 2
+           or status = 0;
     </select>
     <select id="selTaskListId" resultType="java.lang.Long">
-        select id from task_list where status = 0 or status = 2;
+        select id
+        from task_list
+        where status = 0
+           or status = 2;
     </select>
 
     <select id="selTaskListonOpen" resultType="com.sd.task.pojo.TaskList">
-        select * from task_list where status = 0 or status = 2;
+        select *
+        from task_list
+        where status = 0
+           or status = 2;
     </select>
 
 
-<!--    <insert id="insTaskList" useGeneratedKeys="true" keyProperty="id">-->
-<!--        INSERT INTO `taskplatform`.`task_list`(`id`, `video_id`, `secuId`, `uid`, `taskTotal`, `task_count`, `status`, `price`, `type`, `createTime`, `updTime`, `description`, `taskLevel`, `chanel`)-->
-<!--        VALUES (default , #{videoId}, #{secuId}, #{uid}, #{taskTotal}, 0, 0, #{price}, #{type}, #{createTime}, #{updTime}, #{description}, #{taskLevel}, #{chanel});-->
-<!--    </insert>-->
+    <!--    <insert id="insTaskList" useGeneratedKeys="true" keyProperty="id">-->
+    <!--        INSERT INTO `taskplatform`.`task_list`(`id`, `video_id`, `secuId`, `uid`, `taskTotal`, `task_count`, `status`, `price`, `type`, `createTime`, `updTime`, `description`, `taskLevel`, `chanel`)-->
+    <!--        VALUES (default , #{videoId}, #{secuId}, #{uid}, #{taskTotal}, 0, 0, #{price}, #{type}, #{createTime}, #{updTime}, #{description}, #{taskLevel}, #{chanel});-->
+    <!--    </insert>-->
 
 </mapper>
