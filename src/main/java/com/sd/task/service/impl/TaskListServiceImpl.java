@@ -302,5 +302,15 @@ public class TaskListServiceImpl implements TaskListService {
             throw new Exception("任务不存在");
         }
         taskListMapper.deleteById(id);
+        List<TaskList> taskContext = (ArrayList<TaskList>) request.getServletContext().getAttribute("taskContext");
+        if (taskContext != null) {
+            for (TaskList task : taskContext) {
+                if ((task.getId() == id)) {
+                    taskContext.remove(task);
+                    stringRedisTemplate.delete(taskList.getVideoId() + ":" + LoadDataCommanRunner.TASKCOUNT);
+                    break;
+                }
+            }
+        }
     }
 }
